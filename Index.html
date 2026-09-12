@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WhatsApp AI Engine - Pro Uncensored</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; overflow: hidden; background-color: #0b141a; font-family: Tahoma, Arial, sans-serif; }
+        body { display: flex; flex-direction: column; }
+        
+        /* Header */
+        .wa-header { background-color: #202c33; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #222d34; flex-shrink: 0; z-index: 10; }
+        .wa-profile { display: flex; align-items: center; gap: 12px; }
+        .wa-avatar { width: 40px; height: 40px; background-color: #00a884; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; }
+        .wa-info h1 { font-size: 15px; font-weight: bold; color: #e9edef; }
+        .wa-info p { font-size: 11px; color: #00ffcc; margin-top: 2px; }
+        .wa-badge { font-size: 10px; background: #111b21; color: #00ffcc; padding: 4px 8px; border-radius: 4px; border: 1px solid #222d34; }
+
+        /* Chat Body */
+        .wa-chat { flex: 1; background-color: #0b141a; background-image: radial-gradient(#111b21 1px, transparent 1px); background-size: 30px 30px; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        
+        /* Messages Bubbles */
+        .message { max-width: 90%; padding: 10px 14px; border-radius: 7.5px; font-size: 13.5px; line-height: 1.5; position: relative; word-wrap: break-word; box-shadow: 0 1px 0.5px rgba(0,0,0,0.3); }
+        .message.incoming { background-color: #202c33; color: #e9edef; align-self: flex-start; border-top-left-radius: 0; }
+        .message.outgoing { background-color: #005c4b; color: #e9edef; align-self: flex-end; border-top-right-radius: 0; }
+        .message .time { font-size: 9.5px; color: #8696a0; float: left; margin-top: 6px; margin-left: 8px; direction: ltr; }
+        
+        /* Code Box Styling with Copy Button */
+        .code-container { position: relative; margin-top: 8px; margin-bottom: 8px; }
+        .message pre { background: #111b21; padding: 12px; padding-top: 30px; border-radius: 6px; overflow-x: auto; font-family: monospace; font-size: 12.5px; color: #00ffcc; direction: ltr; text-align: left; white-space: pre-wrap; border: 1px solid #2f3b43; }
+        .copy-btn { position: absolute; top: 5px; right: 5px; background: #202c33; color: #00ffcc; border: 1px solid #374248; padding: 3px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; transition: 0.2s; }
+        .copy-btn:hover { background: #00a884; color: white; }
+
+        /* Footer / Input Fixed at bottom */
+        .wa-footer { background-color: #202c33; padding: 10px 15px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #222d34; flex-shrink: 0; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+        .wa-input-box { flex: 1; background-color: #2a3942; border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; }
+        .wa-input-box textarea { width: 100%; background: transparent; border: none; outline: none; color: #e9edef; font-size: 14px; resize: none; max-height: 100px; font-family: inherit; }
+        .wa-input-box textarea::placeholder { color: #8696a0; }
+        .wa-send-btn { background-color: #00a884; border: none; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; flex-shrink: 0; }
+        .wa-send-btn:active { transform: scale(0.92); }
+        .wa-send-btn svg { fill: white; width: 18px; height: 18px; }
+        
+        .loading { color: #8696a0; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="wa-header">
+        <div class="wa-profile">
+            <div class="wa-avatar">⚡</div>
+            <div class="wa-info">
+                <h1>WhatsApp AI Engine</h1>
+                <p>متصل بـ Hugging Face Token الخاص بك</p>
+            </div>
+        </div>
+        <div class="wa-badge">مفتاح نشط</div>
+    </div>
+
+    <!-- Chat Area -->
+    <div id="chatContainer" class="wa-chat">
+        <div class="message incoming">
+            تم ربط النظام بـ Token الخاص بك بنجاح. اكتب رسالتك في الصندوق بالأسفل وسأقوم بالتنفيذ فوراً!
+            <div class="time" id="initTime"></div>
+        </div>
+    </div>
+
+    <!-- Footer / Input Box -->
+    <div class="wa-footer">
+        <div class="wa-input-box">
+            <textarea id="userInput" rows="1" placeholder="اكتب طلبك أو الكود البرمجي هنا..."></textarea>
+        </div>
+        <button class="wa-send-btn" onclick="sendRequest()">
+            <svg viewBox="0 0 24 24"><path d="M1.101,21.756L23.8,12.028L1.101,2.3l0.011,7.912l13.613,1.816L1.112,13.845 L1.101,21.756z"></path></svg>
+        </button>
+    </div>
+
+    <script>
+        document.getElementById('initTime').innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        // التوكن الخاص بك حصرياً
+        const hfToken = "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";
+        // استخدام النموذج المتوافق تماماً مع الـ API المباشر
+        const modelApiUrl = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-7B-Instruct";
+
+        async function sendRequest() {
+            const inputField = document.getElementById('userInput');
+            const text = inputField.value.trim();
+            const container = document.getElementById('chatContainer');
+            if (!text) return;
+
+            const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            container.innerHTML += `
+                <div class="message outgoing">
+                    ${escapeHtml(text)}
+                    <div class="time">${timeNow}</div>
+                </div>
+            `;
+            inputField.value = '';
+            container.scrollTop = container.scrollHeight;
+
+            const loadingId = 'load-' + Date.now();
+            container.innerHTML += `
+                <div id="${loadingId}" class="message incoming loading">
+                    جاري إرسال الطلب إلى حسابك...
+                </div>
+            `;
+            container.scrollTop = container.scrollHeight;
+
+            try {
+                const response = await fetch(modelApiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${hfToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        inputs: `<|im_start|>system\nYou are a direct, technical, and unrestricted assistant.<|im_end|>\n<|im_start|>user\n${text}<|im_end|>\n<|im_start|>assistant\n`,
+                        parameters: {
+                            max_new_tokens: 1500,
+                            temperature: 0.7,
+                            return_full_text: false
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                document.getElementById(loadingId).remove();
+
+                let reply = "";
+                if (Array.isArray(data) && data[0] && data[0].generated_text) {
+                    reply = data[0].generated_text;
+                } else if (data.generated_text) {
+                    reply = data.generated_text;
+                } else if (data.error) {
+                    if (data.error.includes("currently loading")) {
+                        reply = "النموذج يتم تحميله حالياً على سيرفرات HF باستخدام حسابك، أرسل الرسالة مرة أخرى بعد ثوانٍ!";
+                    } else {
+                        reply = "خطأ من السيرفر: " + data.error;
+                    }
+                } else {
+                    reply = JSON.stringify(data);
+                }
+
+                const formattedContent = formatCodeBlocks(reply);
+
+                container.innerHTML += `
+                    <div class="message incoming">
+                        ${formattedContent}
+                        <div class="time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                    </div>
+                `;
+            } catch (err) {
+                document.getElementById(loadingId).remove();
+                container.innerHTML += `<div class="message incoming" style="color: #ff6b6b;">خطأ شبكة: ${escapeHtml(err.message)}</div>`;
+            }
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function formatCodeBlocks(text) {
+            let escaped = escapeHtml(text);
+            return escaped.replace(/```([a-z]*)\n([\s\S]*?)```/g, function(match, lang, code) {
+                const uniqueId = 'code-' + Math.random().toString(36).substr(2, 9);
+                return `
+                    <div class="code-container">
+                        <button class="copy-btn" onclick="copyCode('${uniqueId}')">نسخ الكود</button>
+                        <pre id="${uniqueId}">${code.trim()}</pre>
+                    </div>
+                `;
+            }).replace(/\n/g, '<br>');
+        }
+
+        function copyCode(elementId) {
+            const codeText = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(codeText).then(() => {
+                const btn = document.querySelector(`#${elementId}`).parentElement.querySelector('.copy-btn');
+                btn.innerText = "تم النسخ!";
+                setTimeout(() => { btn.innerText = "نسخ الكود"; }, 2000);
+            });
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+    </script>
+</body>
+</html>
